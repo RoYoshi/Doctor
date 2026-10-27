@@ -12,6 +12,28 @@ Kirigami.ApplicationWindow {
     title: "FE-Xico Doctor"
 
     property bool consoleVisible: false
+    property string pendingAction: ""
+
+    function confirmAction(action, heading, command, description) {
+        pendingAction = action
+        confirmation.title = heading
+        commandPreview.text = "Command: " + command + "\\n\\n" + description
+        confirmation.open()
+    }
+    Controls.Dialog {
+        id: confirmation
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(root.width - 60, 540)
+        modal: true
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onAccepted: DoctorBackend.runAction(root.pendingAction)
+        contentItem: Controls.Label {
+            id: commandPreview
+            padding: Kirigami.Units.largeSpacing
+            wrapMode: Text.WordWrap
+        }
+    }
 
     pageStack.initialPage: Kirigami.ScrollablePage {
         title: "System Overview"
@@ -226,18 +248,33 @@ Kirigami.ApplicationWindow {
                 }
             }
 
-            Kirigami.Heading {
-                text: "Maintenance & Advanced"
-                level: 2
+            Kirigami.Heading { text: "Maintenance"; level: 2 }
+            Controls.Label { Layout.fillWidth: true; text: "User-session repairs, with previews and confirmations. Bootc upgrades remain in FE-Xico Updater."; wrapMode: Text.WordWrap }
+            Flow { Layout.fillWidth: true; spacing: Kirigami.Units.smallSpacing
+                Controls.Button { text: "Restart Audio"; enabled: !DoctorBackend.busy; onClicked: root.confirmAction("audio-restart", "Restart Audio", "systemctl --user restart pipewire.service pipewire-pulse.service wireplumber.service", "Briefly interrupts audio and restarts the user session audio services.") }
+                Controls.Button { text: "Refresh KDE Cache"; enabled: !DoctorBackend.busy; onClicked: root.confirmAction("kde-cache", "Refresh KDE Cache", "kbuildsycoca6 --noincremental", "Rebuilds the KDE application and service cache.") }
+                Controls.Button { text: "Failed User Services"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("user-service-health") }
+                Controls.Button { text: "Recent Warnings"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("logs") }
             }
-            Controls.Label {
-                Layout.fillWidth: true
-                text: "Coming later: repairs, power profiles, KDE maintenance, "
-                      + "GPU controls and custom actions. FE-Xico Updater remains "
-                      + "responsible for upgrades and rollbacks."
-                wrapMode: Text.WordWrap
-                opacity: 0.8
+            Kirigami.Heading { text: "Performance"; level: 2 }
+            Controls.Label { Layout.fillWidth: true; text: "Power profile controls. Only supported profiles can succeed; Balanced is the reset choice."; wrapMode: Text.WordWrap }
+            Flow { Layout.fillWidth: true; spacing: Kirigami.Units.smallSpacing
+                Controls.Button { text: "Current Profile"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("power-current") }
+                Controls.Button { text: "Available Profiles"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("power-options") }
+                Controls.Button { text: "Performance"; enabled: !DoctorBackend.busy; onClicked: root.confirmAction("power-performance", "Performance", "powerprofilesctl set performance", "Changes the active system power profile. Choose Balanced / Reset to reverse this selection.") }
+                Controls.Button { text: "Balanced / Reset"; enabled: !DoctorBackend.busy; onClicked: root.confirmAction("power-balanced", "Balanced / Reset", "powerprofilesctl set balanced", "Changes the active system power profile. Choose Balanced / Reset to reverse this selection.") }
+                Controls.Button { text: "Power Saver"; enabled: !DoctorBackend.busy; onClicked: root.confirmAction("power-saver", "Power Saver", "powerprofilesctl set power-saver", "Changes the active system power profile. Choose Balanced / Reset to reverse this selection.") }
             }
+            Controls.Label { Layout.fillWidth: true; text: "GPU tuning and per-game profiles are planned, not yet enabled."; wrapMode: Text.WordWrap; opacity: 0.8 }
+            Kirigami.Heading { text: "Advanced"; level: 2 }
+            Controls.Label { Layout.fillWidth: true; text: "Read-only system inspection; kernel configuration edits and custom user actions are reserved for a later milestone."; wrapMode: Text.WordWrap }
+            Flow { Layout.fillWidth: true; spacing: Kirigami.Units.smallSpacing
+                Controls.Button { text: "Enabled Services"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("services-enabled") }
+                Controls.Button { text: "Kernel Arguments"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("kernel-params") }
+                Controls.Button { text: "Network"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("network") }
+                Controls.Button { text: "Disks"; enabled: !DoctorBackend.busy; onClicked: DoctorBackend.runAction("disks") }
+            }
+            Controls.Label { Layout.fillWidth: true; text: "Custom actions: planned. This draft cannot execute arbitrary commands or edit system files."; wrapMode: Text.WordWrap; opacity: 0.8 }
         }
     }
 

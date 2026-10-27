@@ -162,6 +162,40 @@ void DoctorBackend::runAction(const QString &actionId)
         program = QStringLiteral("flatpak");
         arguments = {QStringLiteral("list"), QStringLiteral("--system"),
                      QStringLiteral("--app"), QStringLiteral("--columns=application,name,origin")};
+    } else if (actionId == QLatin1String("audio-restart")) {
+        program = QStringLiteral("systemctl");
+        arguments = {QStringLiteral("--user"), QStringLiteral("restart"), QStringLiteral("pipewire.service"), QStringLiteral("pipewire-pulse.service"), QStringLiteral("wireplumber.service")};
+    } else if (actionId == QLatin1String("kde-cache")) {
+        program = QStringLiteral("kbuildsycoca6");
+        arguments = {QStringLiteral("--noincremental")};
+    } else if (actionId == QLatin1String("power-current") || actionId == QLatin1String("power-options")) {
+        program = QStringLiteral("powerprofilesctl");
+        arguments = {actionId == QLatin1String("power-current") ? QStringLiteral("get") : QStringLiteral("list")};
+    } else if (actionId == QLatin1String("power-performance") ||
+               actionId == QLatin1String("power-balanced") ||
+               actionId == QLatin1String("power-saver")) {
+        program = QStringLiteral("powerprofilesctl");
+        arguments = {QStringLiteral("set"), actionId == QLatin1String("power-performance")
+            ? QStringLiteral("performance") : actionId == QLatin1String("power-balanced")
+            ? QStringLiteral("balanced") : QStringLiteral("power-saver")};
+    } else if (actionId == QLatin1String("user-service-health")) {
+        program = QStringLiteral("systemctl");
+        arguments = {QStringLiteral("--user"), QStringLiteral("--failed"), QStringLiteral("--no-pager")};
+    } else if (actionId == QLatin1String("logs")) {
+        program = QStringLiteral("journalctl");
+        arguments = {QStringLiteral("--user"), QStringLiteral("-p"), QStringLiteral("warning"), QStringLiteral("-n"), QStringLiteral("80"), QStringLiteral("--no-pager")};
+    } else if (actionId == QLatin1String("network")) {
+        program = QStringLiteral("nmcli");
+        arguments = {QStringLiteral("device"), QStringLiteral("status")};
+    } else if (actionId == QLatin1String("disks")) {
+        program = QStringLiteral("lsblk");
+        arguments = {QStringLiteral("-o"), QStringLiteral("NAME,TYPE,SIZE,FSTYPE,MOUNTPOINTS")};
+    } else if (actionId == QLatin1String("services-enabled")) {
+        program = QStringLiteral("systemctl");
+        arguments = {QStringLiteral("list-unit-files"), QStringLiteral("--state=enabled"), QStringLiteral("--no-pager")};
+    } else if (actionId == QLatin1String("kernel-params")) {
+        program = QStringLiteral("cat");
+        arguments = {QStringLiteral("/proc/cmdline")};
     } else {
         emit commandError(QStringLiteral("Unknown or unsupported diagnostic action."));
         return;
