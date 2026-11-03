@@ -34,8 +34,14 @@ ecm_find_qmlmodule(org.kde.kirigami REQUIRED)
 add_subdirectory(src)
 
 install(
-    PROGRAMS io.github.royoshi.fexicodoctor.desktop
+    FILES io.github.royoshi.fexicodoctor.desktop
     DESTINATION ${KDE_INSTALL_APPDIR}
+)
+
+# Reuse the owner's existing Doctor artwork; no placeholder icon replacement.
+install(
+    FILES icons/io.github.royoshi.fexicodoctor.svg
+    DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps
 )
 
 feature_summary(

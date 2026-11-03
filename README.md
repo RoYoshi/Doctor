@@ -27,6 +27,18 @@ The first development milestone focuses on:
 
 Privileged system modification will be added later using proper authorization mechanisms rather than running the entire application as root.
 
+### First working GUI draft
+
+The initial Kirigami shell now has a read-only health snapshot (CPU model, memory,
+root storage, uptime, kernel, GPU vendor and FE-Xico version) plus three
+allowlisted diagnostics: failed services, bootc deployment and installed system
+Flatpaks. The console streams output, times out stalled checks and has a Stop
+button. The original FE-Xico Doctor SVG is reused for the desktop launcher.
+
+This remains an **unvalidated GUI prototype**. No privileged repairs, updates,
+service restarts or automatic changes have been enabled. Details and testing
+notes are in [docs/rough-draft-v0.1.md](docs/rough-draft-v0.1.md).
+
 ---
 
 # Features
