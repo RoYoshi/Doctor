@@ -40,7 +40,7 @@ jobs:
         run: |
           dnf5 -y install --setopt=install_weak_deps=False \
             rpm-build rpm-sign python3-devel desktop-file-utils gnupg2 \
-            python3-pyside6 dejavu-sans-fonts util-linux shadow-utils procps-ng hostname
+            python3-pyside6 python3-jsonschema dejavu-sans-fonts util-linux shadow-utils procps-ng hostname
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Check the version and the signing key
         env:
