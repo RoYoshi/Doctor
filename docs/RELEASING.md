@@ -43,8 +43,8 @@ or commits. Only the **public** key is committed.
 3. **Store the private key as secrets** of this repository (not FE-XicoOS):
 
    ```bash
-   gpg --armor --export-secret-keys FINGERPRINT | gh secret set DOCTOR_RPM_SIGNING_KEY -R RoYoshi/FE-Xico-Doctor
-   gh secret set DOCTOR_RPM_SIGNING_PASSPHRASE -R RoYoshi/FE-Xico-Doctor    # prompts; skip if no passphrase
+   gpg --armor --export-secret-keys FINGERPRINT | gh secret set DOCTOR_RPM_SIGNING_KEY -R RoYoshi/Doctor
+   gh secret set DOCTOR_RPM_SIGNING_PASSPHRASE -R RoYoshi/Doctor    # prompts; skip if no passphrase
    ```
 
    Keep an offline backup of the private key. Losing it means a new key, and
@@ -91,9 +91,8 @@ gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum -c SHA256SUMS
 
 FE-XicoOS keeps the signed RPMs for the pinned version in its repository
 (`build_files/doctor/`), with the version, each RPM's SHA-256, and the
-public key and its fingerprint. Both repositories are private, so an image
-build cannot download release assets without a token; keeping the reviewed
-binaries avoids adding one.
+public key and its fingerprint. Every image build, including local and
+offline ones, then installs exactly the reviewed bytes and downloads nothing.
 
 Before installing, the image build checks:
 - the SHA-256;

@@ -1,42 +1,120 @@
 # FE-Xico Doctor
 
-**FE-Xico Doctor** is a read-only system-health application for
-[FE-XicoOS](https://github.com/RoYoshi/FE-Xico), a Fedora bootc desktop. It
-checks:
-- bootc deployments and updates;
-- services and SELinux;
-- graphics drivers, including NVIDIA, and game controllers;
-- storage, Flatpaks, network and logs.
+A read-only system-health checker for **FE-XicoOS**, a Fedora bootc desktop
+with KDE Plasma 6. It looks at the parts of the system that tend to go wrong:
+updates and bootc deployments, services, graphics drivers, controllers,
+storage, Flatpaks, network and logs. For each finding it says what it means
+and what you can do about it.
 
-For each finding it explains what it means and what you can do.
+Doctor only looks. It never needs root, never changes anything, never makes a
+network request, and never uploads anything.
 
-It never needs root, never changes the system and never makes network
-requests.
+## What it checks
 
-- **Desktop window:** status at a glance, check groups, filters, details and
-  report export (PySide6 / Qt Widgets, light and dark themes).
-- **Command line:** `fe-xico-doctor --text | --json | --summary | --list-checks`,
-  with `--redact` for reports you want to share. Exit status: 0 no error,
-  1 error found, 2 usage error, 3 Doctor failed.
-- **Report:** JSON schema `fe-xico-doctor/report` v2
-  (`data/fe-xico-doctor-report.schema.json`).
+| Group | Examples |
+|---|---|
+| System & bootc | booted, staged, rollback and pinned deployments; image source; a stale `/etc/os-release` |
+| Updates | the automatic update timer, the legacy timer that reboots unattended, last update results, FE-Xico Updater's configuration |
+| Security & Services | SELinux mode, failed units, permissions on update state |
+| Hardware & Gaming | GPU driver (NVIDIA Open, Nouveau/NVK, AMD, Intel), NVIDIA kernel/userspace mismatch, audio, Xbox-protocol controllers, temperatures |
+| Storage | read-only `/var` or `/etc`, where your home lives, free space |
+| Apps & Flatpaks | core apps present, Flatpak provisioning |
+| Network | links, routes, DNS, NetworkManager (local state only, no packets sent) |
+| Logs | critical boot-log entries, errors from FE-XicoOS update services |
 
-Full documentation: [docs/FE_XICO_DOCTOR.md](docs/FE_XICO_DOCTOR.md).
+`fe-xico-doctor --list-checks` lists every check ID. The full list, with what
+each one reads, is in [docs/FE_XICO_DOCTOR.md](docs/FE_XICO_DOCTOR.md#checks).
 
-## Status
+Every finding has one of five levels:
 
-Version **1.0.0**. This is the application that FE-XicoOS has shipped since
-Doctor v1.0. Until 2026-11 it lived in the FE-XicoOS repository
-(`system_files/usr/lib/fe-xicoos/fexico_doctor`). It moved here unchanged
-from FE-XicoOS commit `2c2d24e`; [docs/MIGRATION.md](docs/MIGRATION.md) has
-the file-by-file record. This repository is now the only place Doctor is
-developed, tested and released. FE-XicoOS installs the signed RPM.
+| Level | Meaning |
+|---|---|
+| **Pass** | verified healthy |
+| **Info** | verified, worth knowing, not a fault |
+| **Warning** | verified, may need attention |
+| **Error** | verified fault likely to break something |
+| **Unknown** | could not be verified (missing tool, permission); never counted as a pass |
 
-The earlier C++/Kirigami prototype (v0.1) is preserved on the
-[`archive/cpp-prototype`](https://github.com/RoYoshi/FE-Xico-Doctor/tree/archive/cpp-prototype)
-branch.
+There is deliberately no percentage "health score".
 
-## Layout
+## Using it
+
+Open **FE-Xico Doctor** from the Plasma menu, or run `fe-xico-doctor`. The
+window shows the overall state, the check groups, results sorted most urgent
+first, and the details of the selected finding: evidence and what you can do.
+Doctor never runs those steps itself. It has light and dark themes and
+follows your desktop by default. The main actions have shortcuts: F5 scans,
+Ctrl+F filters, Ctrl+S saves a redacted report.
+
+From a terminal:
+
+| Command | Output |
+|---|---|
+| `fe-xico-doctor --summary` | the overall state and anything that is not a pass |
+| `fe-xico-doctor --text` | the full report |
+| `fe-xico-doctor --json` | the report as JSON ([schema](data/fe-xico-doctor-report.schema.json) `fe-xico-doctor/report` v2) |
+| `fe-xico-doctor --only hardware --only system.bootc` | only these groups or checks |
+| `fe-xico-doctor --text --redact` | a version for sharing (see below) |
+
+Exit status: **0** no error, **1** at least one error, **2** usage error,
+**3** Doctor itself failed. Warnings and unknowns don't change it. A scan
+stops after 60 seconds (`--deadline`, 5–300).
+
+### Sharing a report
+
+`--redact`, **Copy summary** and **Export → Redacted report** replace your
+username, hostname, home paths, IP and MAC addresses, e-mail addresses,
+tokens, passwords, keys and machine IDs with placeholders. Redaction is
+best-effort, so read the report before you post it. Full reports are saved
+only where you choose, readable only by you (mode 0600).
+
+## How it stays safe
+
+- **Read-only.** No sudo or Polkit, no bootc or rpm-ostree changes, no package
+  installs, no `systemctl start/stop/enable`, no reboots, no file changes
+  outside a report you save.
+- **Allowlisted commands.** Every program Doctor may run, and every argument
+  list it may use, is declared in [`fexico_doctor/runner.py`](fexico_doctor/runner.py).
+  Anything else is refused before a process starts, and a test fails if an
+  allowed pattern contains a changing verb.
+- **Bounded.** No shell, a minimal environment, time and output limits on
+  every command, at most four at a time.
+- **Trusted inputs only.** It believes state files only when they are
+  root-owned and not writable by others. It never reads tokens, keyrings,
+  SSH keys, shell history or private app data.
+
+## Install
+
+**FE-XicoOS** includes Doctor: every image installs a pinned, signed release.
+
+On **Fedora 45 or 44**, download the RPM for your release and
+`RPM-GPG-KEY-fe-xico-doctor` from the
+[latest release](https://github.com/RoYoshi/Doctor/releases/latest). Check the
+key, then install:
+
+```bash
+gpg --show-keys RPM-GPG-KEY-fe-xico-doctor
+#   the fingerprint must be D0FA314C5A9DAE72B16F0AAEEB49C4761F24DE55
+sudo rpmkeys --import RPM-GPG-KEY-fe-xico-doctor
+rpmkeys --checksig fe-xico-doctor-1.0.0-1.fc45.noarch.rpm   # expect "signatures OK"
+sudo dnf install ./fe-xico-doctor-1.0.0-1.fc45.noarch.rpm
+```
+
+It needs `python3-pyside6`, which dnf installs for you. Diagnostic tools
+(bootc, flatpak, lspci, nvidia-smi…) are optional. Checks for things your
+system doesn't have report **Unknown** instead of a false pass.
+
+## Development
+
+Python 3 with PySide6 (Qt Widgets); the logic is Qt-free and tested without a
+display.
+
+```bash
+python3 -m unittest discover -s tests                         # GUI tests need python3-pyside6
+bin/fe-xico-doctor --summary                                  # run from the checkout
+QT_QPA_PLATFORM=offscreen bin/fe-xico-doctor --gui-self-test  # drive the real window headless
+packaging/build-rpm.sh                                        # RPM + SRPM in dist/ (needs rpm-build python3-devel desktop-file-utils)
+```
 
 | Path | Installed as |
 |---|---|
@@ -44,41 +122,35 @@ branch.
 | `fexico_doctor/` | `/usr/lib/fe-xicoos/fexico_doctor/` |
 | `data/io.github.royoshi.fexicodoctor.desktop` | `/usr/share/applications/` |
 | `data/fe-xico-doctor-report.schema.json` | `/usr/share/fe-xicoos/` |
-| `data/icons/hicolor/` | `/usr/share/icons/hicolor/` (raster badge, 16–512 px) |
-| `tools/build_doctor_icon.py` | developer tool: regenerates the icons from `tools/fe-xico-doctor-icon-source.png` |
-| `packaging/` | RPM spec, build script and CI checks |
+| `data/icons/hicolor/` | `/usr/share/icons/hicolor/` |
+| `packaging/` | RPM spec, build script, CI checks |
 
-## Develop and test
+CI builds the RPM on Fedora 45 and 44 for every pull request. It checks the
+file list and dependencies and runs rpmlint. It installs the package with
+signature enforcement on, signed with a throwaway key. Then it runs the CLI
+and GUI tests from the installed package as an unprivileged user.
 
-```bash
-python3 -m unittest discover -s tests            # source tests (GUI tests need python3-pyside6)
-bin/fe-xico-doctor --summary                     # run from the checkout
-QT_QPA_PLATFORM=offscreen bin/fe-xico-doctor --gui-self-test
-```
-
-## Build the RPM
-
-On Fedora (45 or 44) with `rpm-build python3-devel desktop-file-utils`:
-
-```bash
-packaging/build-rpm.sh          # → dist/fe-xico-doctor-X.Y.Z-1.fcNN.noarch.rpm and the SRPM
-```
-
-Runtime dependencies are `python3`, `python3-pyside6`, `hicolor-icon-theme`
-and the matching `python(abi)`. All diagnostic tools (bootc, systemctl,
-journalctl, rpm, flatpak, lspci, nvidia-smi, …) are optional: Doctor reports
-a missing one as Unknown.
-
-Fedora 45 enforces RPM signatures, so a locally built, unsigned package will
-not install there. Use the signed release, or sign the package with your own
-key and import that key first.
+Fedora 45 refuses unsigned packages, so a local build installs there only
+once you sign it with your own key and import that key.
 
 ## Releases
 
-Signed releases are created by hand through the protected release workflow;
-see [docs/RELEASING.md](docs/RELEASING.md) for versioning, signing, and how
-FE-XicoOS pins a release.
+Releases are signed, made by hand through a protected workflow, and
+published only after review. [docs/RELEASING.md](docs/RELEASING.md) covers
+versioning, signing, verification and how FE-XicoOS pins a release.
+
+Signing key: `D0FA314C5A9DAE72B16F0AAEEB49C4761F24DE55`
+([`packaging/RPM-GPG-KEY-fe-xico-doctor`](packaging/RPM-GPG-KEY-fe-xico-doctor)).
+
+## History
+
+Doctor shipped inside the FE-XicoOS repository until November 2026 and moved
+here for 1.0.0. [docs/MIGRATION.md](docs/MIGRATION.md) records every file. This
+repository is now where it is developed, tested and released. The earlier
+C++/Kirigami prototype (v0.1) is kept on the
+[`archive/cpp-prototype`](https://github.com/RoYoshi/Doctor/tree/archive/cpp-prototype)
+branch.
 
 ## License
 
-Apache-2.0 (see `LICENSE`), as in FE-XicoOS, where this code originated.
+Apache-2.0. See [LICENSE](LICENSE).
