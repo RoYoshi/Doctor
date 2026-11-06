@@ -125,8 +125,8 @@ dependency.
   (white cross with a smile). It is Doctor's own identity and deliberately does
   **not** use the FE-XicoOS top hat.
   - It ships as raster PNGs at 16–512 px in `hicolor`, downscaled from the
-    pinned original `tools/theme/fe-xico-doctor-icon-source.png` by
-    `python3 tools/theme/build_doctor_icon.py`.
+    pinned original `tools/fe-xico-doctor-icon-source.png` by
+    `python3 tools/build_doctor_icon.py`.
   - The art is never redrawn, and there is no SVG.
   - If the icon is missing, the window draws a deterministic "FX" glyph. There
     is never a generic or Tux fallback.

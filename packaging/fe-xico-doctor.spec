@@ -8,7 +8,7 @@ Release:        1%{?dist}
 Summary:        Read-only system health diagnostics for FE-XicoOS
 
 License:        Apache-2.0
-URL:            https://github.com/RoYoshi/FE-Xico-Doctor
+URL:            https://github.com/RoYoshi/Doctor
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
