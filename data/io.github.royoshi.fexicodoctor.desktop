@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=FE-Xico Doctor
+GenericName=System Health Diagnostics
+Comment=Read-only checks for bootc deployments, updates, services, drivers, controllers, storage and network
+Exec=fe-xico-doctor
+Icon=io.github.royoshi.fexicodoctor
+Terminal=false
+Categories=System;Monitor;
+Keywords=FE-Xico;Doctor;Health;Diagnostics;bootc;Updates;SELinux;NVIDIA;xpad;Controller;Flatpak;
+StartupNotify=true
+StartupWMClass=fe-xico-doctor
+X-KDE-StartupNotify=true

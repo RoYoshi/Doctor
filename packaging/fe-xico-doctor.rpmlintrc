@@ -1,0 +1,10 @@
+# rpmlint filters for fe-xico-doctor. Each one is a deliberate choice:
+# Doctor documents its CLI in --help and docs/FE_XICO_DOCTOR.md; no man page yet.
+addFilter("no-manual-page-for-binary")
+# "bootc" is the name of the tool Doctor inspects, not a misspelling.
+addFilter("spelling-error \('bootc'")
+# FE-XicoOS has always installed Doctor's package under /usr/lib/fe-xicoos;
+# the RPM keeps that path so nothing changes for users or other components.
+addFilter("only-non-binary-in-usr-lib")
+# Source0 is built locally from `git archive` by packaging/build-rpm.sh.
+addFilter("invalid-url Source0:")
